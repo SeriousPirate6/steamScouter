@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const { price_converter } = require("./utility/price-converter");
+const { price_converter } = require("./utility/price_converter");
+const { steam } = require("./utility/steam");
 
 const app = express();
 
@@ -10,19 +11,30 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.get("/getPriceConversion", async (req, res) => {
-  if (!req.body || !req.body.to || !req.body.from || !req.body.amount) {
+  if (!req.query.to || !req.query.amount) {
     res.status(400).send({
       status: "bad request",
-      message: "body required with params: to, from, amount",
+      message: "required params: to, amount",
     });
   } else {
     const value = (
-      await price_converter.convertToEUR(
-        req.body.to,
-        req.body.from,
-        req.body.amount
-      )
+      await price_converter.convertToEUR(req.query.to, req.query.amount)
     ).data;
+    res.send(value);
+  }
+});
+
+app.get("/getGameById", async (req, res) => {
+  if (!req.query.appids || !req.query.countryCode) {
+    res.status(400).send({
+      status: "bad request",
+      message: "required params: appids, countryCode",
+    });
+  } else {
+    const value = await steam.getGameByAppID(
+      req.query.appids,
+      req.query.countryCode
+    );
     res.send(value);
   }
 });
