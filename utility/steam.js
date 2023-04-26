@@ -1,6 +1,6 @@
 const axios = require("axios");
 const { json_utils } = require("./json_utils");
-const constants = require("../constants/constants");
+const properties = require("../constants/properties");
 
 const filterData = (response) => {
   const firstVal = Object.keys(response.data)[0]; // taking the first element of the JSON object, whatever it is
@@ -30,7 +30,7 @@ const steam = {
     const appids_list = appids.split(",");
     try {
       const response = await axios.get(
-        `${constants.STEAM_API_URL}/appdetails`,
+        `${properties.STEAM_API_URL}/appdetails`,
         {
           params: {
             appids,
