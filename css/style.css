@@ -1,0 +1,36 @@
+body {
+    font-family: arial, sans-serif;
+    text-align: center;
+}
+
+div {
+    overflow-y: auto;
+    height: 400px;
+    position: sticky;
+    top: 0px;
+}
+
+h2 {
+    margin-top: 10px;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th {
+    background: #eee;
+    position: sticky;
+    top: 0px;
+}
+
+td, th {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #dddddd;
+}
+
+tr:nth-child(even) {
+    background-color: #dddddd;
+}

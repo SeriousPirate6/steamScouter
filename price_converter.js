@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const axios = require("axios");
-const properties = require("../constants/properties");
+const properties = require("./constants/properties");
 
 const convertCurrency = async (from, to, amount) => {
   try {
@@ -23,8 +23,8 @@ const convertCurrency = async (from, to, amount) => {
 };
 
 const price_converter = {
-  convertToEUR: async (to, amount) => {
-    return await convertCurrency(properties.EURO, to, amount);
+  convertToEUR: async (to) => {
+    return await convertCurrency(properties.EURO, to, 1);
   },
 };
 

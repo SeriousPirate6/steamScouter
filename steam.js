@@ -1,6 +1,6 @@
 const axios = require("axios");
-const { json_utils } = require("./json_utils");
-const properties = require("../constants/properties");
+const { json_utils } = require("./utility/json_utils");
+const properties = require("./constants/properties");
 
 const filterData = (response) => {
   const firstVal = Object.keys(response.data)[0]; // taking the first element of the JSON object, whatever it is

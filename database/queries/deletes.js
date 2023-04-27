@@ -1,19 +1,20 @@
 const properties = require("../../constants/properties");
 const queries = require("../../constants/queries");
 const { getClient } = require("../connection");
-const { logQuery } = require("../../utility/log");
+const { logQuery } = require("../../utility/log_query");
 
 module.exports = {
   deleteCurrencies: async (field, value) => {
     const client = await getClient();
     const query = queries.DELETES.get(properties.CURRENCIES);
+    const params = [field, value];
 
     try {
-      const entries = await client.query(query, [field, value]);
-      logQuery(query);
+      const entries = await client.query(query, params);
+      logQuery(query, params);
       console.log(`Database entries: ${entries.rowCount} row(s)`);
     } catch (e) {
-      logQuery(query);
+      logQuery(query, params);
       console.log("Can't delete the row(s):\n", e);
     }
 

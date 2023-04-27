@@ -1,26 +1,29 @@
 const properties = require("../../constants/properties");
 const queries = require("../../constants/queries");
 const { getClient } = require("../connection");
-const { logQuery } = require("../../utility/log");
+const { logQuery, addQueryParams } = require("../../utility/log_query");
 
 module.exports = {
-  selectCurrencies: async () => {
+  selectAll: async (params) => {
     const client = await getClient();
-    const query = queries.SELECTS.get(properties.CURRENCIES);
+    const query = addQueryParams(
+      queries.SELECTS.get(properties.SELECT_ALL),
+      params
+    );
 
     try {
       const entries = await client.query(query);
-      logQuery(query);
-      console.log(`Database entries: ${entries.rowCount} row(s)`);
-      console.log(Object.keys(entries.rows?.[0]).join("\t"));
-      console.log(
-        `${entries.rows.map((r) => Object.values(r).join("\t")).join("\n")}`
-      );
-    } catch (e) {
-      logQuery(query);
-      console.log("Can't insert the row:\n", e);
-    }
+      logQuery(query, params);
 
-    await client.end();
+      console.log(`Database entries: ${entries.rowCount} row(s)`);
+
+      await client.end();
+
+      return entries;
+    } catch (e) {
+      logQuery(query, params);
+      console.log("Can't insert the row:\n", e);
+      return;
+    }
   },
 };

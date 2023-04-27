@@ -6,13 +6,13 @@ module.exports = Object.freeze({
     [
       properties.CURRENCIES,
       `CREATE TABLE IF NOT EXISTS ${properties.CURRENCIES} (
-            id SERIAL NOT NULL,
-            from_begin VARCHAR(3) NOT NULL,
-            to_end VARCHAR(3) NOT NULL,
-            value NUMERIC(10, 2),
-            date TIMESTAMP NOT NULL DEFAULT current_timestamp,
-            PRIMARY KEY (id, from_begin, to_end)
-        );`,
+          id SERIAL NOT NULL,
+          from_begin VARCHAR(3) NOT NULL,
+          to_end VARCHAR(3) NOT NULL,
+          value NUMERIC(10, 2),
+          date TIMESTAMP NOT NULL DEFAULT current_timestamp,
+        PRIMARY KEY (id, from_begin, to_end)
+      );`,
     ],
   ]),
 
@@ -30,7 +30,16 @@ module.exports = Object.freeze({
 
   // SELECTS
   SELECTS: new Map([
-    [properties.CURRENCIES, `SELECT * FROM ${properties.CURRENCIES}`],
+    [properties.SELECT_ALL, `SELECT * FROM $1`],
+    [
+      properties.SELECT_EXISTS,
+      `SELECT 
+    COUNT(table_name)
+FROM 
+    information_schema.tables 
+WHERE 
+	table_name = $1;`,
+    ],
   ]),
 
   // DELETES
@@ -38,7 +47,10 @@ module.exports = Object.freeze({
     [
       properties.CURRENCIES,
       `DELETE FROM ${properties.CURRENCIES}
-      WHERE $1 = $2`,
+      WHERE $1 = $2;`,
     ],
   ]),
+
+  // DROPS
+  DROPS: new Map([[properties.CURRENCIES, `DROP TABLE $1;`]]),
 });
