@@ -7,19 +7,19 @@ module.exports = {
   doesTableExists: async (table) => {
     const client = await getClient();
     const query = queries.SELECTS.get(properties.SELECT_EXISTS);
+    const params = [table.toLowerCase()];
 
     try {
-      const result = await client.query(query, table);
-      const exist = result.rows[0].exists;
-      logQuery(query, table);
+      const exist = (await client.query(query, params)).rows[0].exists;
       await client.end();
 
+      logQuery(query, params);
       console.log(`Table ${table} exists: ${exist}`);
 
       return exist;
     } catch (e) {
       console.log(`Can't execute the query:\n`, e);
-      logQuery(query, table);
+      logQuery(query, params);
       return;
     }
   },

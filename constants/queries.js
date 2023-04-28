@@ -33,12 +33,11 @@ module.exports = Object.freeze({
     [properties.SELECT_ALL, `SELECT * FROM $1`],
     [
       properties.SELECT_EXISTS,
-      `SELECT 
-    COUNT(table_name)
-FROM 
-    information_schema.tables 
-WHERE 
-	table_name = $1;`,
+      `SELECT EXISTS (
+          SELECT FROM pg_tables
+          WHERE schemaname = 'public'
+          AND tablename  = $1
+      );`,
     ],
   ]),
 

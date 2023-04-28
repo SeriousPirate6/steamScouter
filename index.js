@@ -27,7 +27,7 @@ app.get("/getPriceConversion", async (req, res) => {
   } else {
     const value = (await price_converter.convertToEUR(to)).data;
     try {
-      if (await doesTableExists([properties.CURRENCIES])) {
+      if (await doesTableExists(properties.CURRENCIES)) {
         await creates.createCurrencies();
       }
       await inserts.insertCurrencies("EUR", to, value.result);
@@ -64,16 +64,16 @@ app.get("/getFromRedis", async (req, res) => {
       message: "Required params: table",
     });
   } else {
-    // if (await doesTableExists([table])) {
-    const result = formatQueryResult(table, await selectAll([table]));
-    res.writeHead(200, { "Content-Type": "text/html" });
-    res.end(result);
-    // } else {
-    //   res.status(400).send({
-    //     status: "bad request",
-    //     message: "Table require does not exists",
-    //   });
-    // }
+    if (await doesTableExists(table)) {
+      const result = formatQueryResult(table, await selectAll([table]));
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end(result);
+    } else {
+      res.status(400).send({
+        status: "bad request",
+        message: "The table required does not exists",
+      });
+    }
   }
 });
 
