@@ -26,4 +26,24 @@ module.exports = {
       return;
     }
   },
+
+  selectLastCurrencyValue: async (params) => {
+    const client = await getClient();
+    const query = queries.SELECTS.get(properties.SELECT_LASTEST_CUR_VAL);
+
+    try {
+      const entries = await client.query(query, params);
+      logQuery(query, params);
+
+      console.log(`Database entries: ${entries.rowCount} row(s)`);
+
+      await client.end();
+
+      return parseFloat(Object.values(entries.rows[0])[0]);
+    } catch (e) {
+      logQuery(query, params);
+      console.log("Can't insert the row:\n", e);
+      return;
+    }
+  },
 };

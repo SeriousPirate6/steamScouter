@@ -39,6 +39,14 @@ module.exports = Object.freeze({
           AND tablename  = $1
       );`,
     ],
+    [
+      properties.SELECT_LASTEST_CUR_VAL,
+      `SELECT value FROM ${properties.CURRENCIES}
+          WHERE from_begin = $1
+          AND to_end = $2
+          ORDER BY date DESC
+          LIMIT 1;`,
+    ],
   ]),
 
   // DELETES
@@ -46,7 +54,7 @@ module.exports = Object.freeze({
     [
       properties.CURRENCIES,
       `DELETE FROM ${properties.CURRENCIES}
-      WHERE $1 = $2;`,
+          WHERE $1 = $2;`,
     ],
   ]),
 

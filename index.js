@@ -1,14 +1,14 @@
 const express = require("express");
-const bodyParser = require("body-parser");
-const { price_converter } = require("./price_converter");
 const { steam } = require("./steam");
+const bodyParser = require("body-parser");
+const drops = require("./database/queries/drops");
+const properties = require("./constants/properties");
 const inserts = require("./database/queries/inserts");
+const creates = require("./database/queries/creates");
+const { price_converter } = require("./price_converter");
 const { selectAll } = require("./database/queries/selects");
 const { formatQueryResult } = require("./utility/format_result");
-const properties = require("./constants/properties");
-const drops = require("./database/queries/drops");
 const { doesTableExists } = require("./utility/check_table");
-const creates = require("./database/queries/creates");
 
 const app = express();
 
@@ -76,6 +76,10 @@ app.get("/getFromRedis", async (req, res) => {
     }
   }
 });
+
+app.get("/addGameMonitoring", async () => {});
+
+app.get("/checkGamePrice", async () => {});
 
 // (async () => {
 //   await drops.deleteCurrencies([properties.CURRENCIES]);
