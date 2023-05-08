@@ -15,6 +15,7 @@ module.exports = Object.freeze({
 
   // TABLES TYPES
   SELECT_ALL: "SELECT_ALL",
+  DROP_TABLE: "DROP_TABLE",
   SELECT_FROM: "SELECT_FROM",
   CREATE_TABLE: "CREATE_TABLE",
   INSERT_TABLE: "INSERT_TABLE",
@@ -23,4 +24,5 @@ module.exports = Object.freeze({
 
   // TABLES
   CURRENCIES: "CURRENCIES",
+  GAMES: "GAMES",
 });

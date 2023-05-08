@@ -14,17 +14,34 @@ module.exports = Object.freeze({
         PRIMARY KEY (id, from_begin, to_end)
       );`,
     ],
+    [
+      properties.GAMES,
+      `CREATE TABLE IF NOT EXISTS ${properties.GAMES} (
+          id SERIAL NOT NULL,
+          game_id INTEGER NOT NULL,
+          eur_price NUMERIC(10, 2),
+          date TIMESTAMP NOT NULL DEFAULT current_timestamp,
+        PRIMARY KEY (game_id)
+      );`,
+    ],
   ]),
 
   // INSERT
   INSERTS: new Map([
     [
       properties.CURRENCIES,
-      `INSERT INTO ${properties.CURRENCIES}(
+      `INSERT INTO ${properties.CURRENCIES} (
           from_begin,
           to_end,
           value
     	) VALUES ($1, $2, $3);`,
+    ],
+    [
+      properties.GAMES,
+      `INSERT INTO ${properties.GAMES} (
+          game_id,
+          eur_price
+    	) VALUES ($1, $2);`,
     ],
   ]),
 
@@ -56,8 +73,13 @@ module.exports = Object.freeze({
       `DELETE FROM ${properties.CURRENCIES}
           WHERE $1 = $2;`,
     ],
+    [
+      properties.GAMES,
+      `DELETE FROM ${properties.GAMES}
+          WHERE $1 = $2;`,
+    ],
   ]),
 
   // DROPS
-  DROPS: new Map([[properties.CURRENCIES, `DROP TABLE $1;`]]),
+  DROPS: new Map([[properties.DROP_TABLE, `DROP TABLE $1;`]]),
 });

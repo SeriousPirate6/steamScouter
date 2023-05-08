@@ -4,10 +4,10 @@ const { getClient } = require("../connection");
 const { logQuery, addQueryParams } = require("../../utility/log_query");
 
 module.exports = {
-  deleteCurrencies: async (table) => {
+  deleteTable: async (table) => {
     const client = await getClient();
     const query = addQueryParams(
-      queries.DROPS.get(properties.CURRENCIES),
+      queries.DROPS.get(properties.DROP_TABLE),
       table
     );
 

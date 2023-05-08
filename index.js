@@ -77,12 +77,33 @@ app.get("/getFromRedis", async (req, res) => {
   }
 });
 
-app.get("/addGameMonitoring", async () => {});
+app.post("/addGameMonitoring", async (req, res) => {
+  const game_ids = req.body.game_ids;
+  if (!game_ids && !Array.isArray(game_ids)) {
+    res.status(400).send({
+      status: "bad request",
+      message: "Required array param: game_id",
+    });
+  } else {
+    if (!(await doesTableExists(properties.GAMES))) {
+      await creates.createGames();
+    }
+    for await (id of game_ids) {
+      const value = await steam.getGameByAppID(`${id}`, properties.CURRENCIES);
+      price = value[id].type.price_overview;
+      await inserts.insertGames(id, price ? price.final : 0);
+    }
+    res.send({
+      code: "success",
+      message: `added monitoring function for ${game_ids} ids`,
+    });
+  }
+});
 
 app.get("/checkGamePrice", async () => {});
 
-// (async () => {
-//   await drops.deleteCurrencies([properties.CURRENCIES]);
-// })();
+(async () => {
+  await drops.deleteTable([properties.GAMES]);
+})();
 
 app.listen(port, () => console.log(`App listening at ${port}`));

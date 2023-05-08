@@ -20,4 +20,22 @@ module.exports = {
     }
     await client.end();
   },
+
+  insertGames: async (game_id, eur_price) => {
+    // check if game provided is already present
+    const client = await getClient();
+    const query = queries.INSERTS.get(properties.GAMES);
+    const params = [game_id, eur_price];
+
+    try {
+      const insertRow = await client.query(query, params);
+      logQuery(query, params);
+
+      console.log(`Inserted ${insertRow.rowCount} row`);
+    } catch (e) {
+      logQuery(query, params);
+      console.log("Can't insert the row:\n", e);
+    }
+    await client.end();
+  },
 };
