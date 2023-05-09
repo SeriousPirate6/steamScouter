@@ -9,6 +9,7 @@ const { price_converter } = require("./price_converter");
 const { selectAll } = require("./database/queries/selects");
 const { formatQueryResult } = require("./utility/format_result");
 const { doesTableExists } = require("./utility/check_table");
+const selects = require("./database/queries/selects");
 
 const app = express();
 
@@ -57,13 +58,14 @@ app.get("/getGameById", async (req, res) => {
 });
 
 app.get("/getFromRedis", async (req, res) => {
-  const table = req.query.table;
+  let table = req.query.table;
   if (!table) {
     res.status(400).send({
       status: "bad request",
       message: "Required params: table",
     });
   } else {
+    if (Array.isArray(table)) table = table[0];
     if (await doesTableExists(table)) {
       const result = formatQueryResult(table, await selectAll([table]));
       res.writeHead(200, { "Content-Type": "text/html" });
@@ -88,22 +90,35 @@ app.post("/addGameMonitoring", async (req, res) => {
     if (!(await doesTableExists(properties.GAMES))) {
       await creates.createGames();
     }
+    const games_added = [];
     for await (id of game_ids) {
+      const game = await selects.gameAlreadyLoaded(id);
+      if (game) continue;
       const value = await steam.getGameByAppID(`${id}`, properties.CURRENCIES);
       price = value[id].type.price_overview;
       await inserts.insertGames(id, price ? price.final : 0);
+      games_added.push(id);
     }
+    const games_already_present = game_ids.filter(
+      (game) => !games_added.includes(game)
+    );
     res.send({
       code: "success",
-      message: `added monitoring function for ${game_ids} ids`,
+      // TODO add possible invalid game_ids
+      message: { games_added, games_already_present },
     });
   }
 });
 
 app.get("/checkGamePrice", async () => {});
 
+// (async () => {
+//   await drops.deleteTable([properties.GAMES]);
+// })();
+
 (async () => {
-  await drops.deleteTable([properties.GAMES]);
+  const value = await selects.gameAlreadyLoaded(2328720);
+  console.log(value);
 })();
 
 app.listen(port, () => console.log(`App listening at ${port}`));

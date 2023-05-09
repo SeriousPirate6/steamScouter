@@ -22,7 +22,7 @@ module.exports = {
       return entries;
     } catch (e) {
       logQuery(query, params);
-      console.log("Can't insert the row:\n", e);
+      console.log("Can't execute the query:\n", e);
       return;
     }
   },
@@ -42,8 +42,41 @@ module.exports = {
       return parseFloat(Object.values(entries.rows[0])[0]);
     } catch (e) {
       logQuery(query, params);
-      console.log("Can't insert the row:\n", e);
+      console.log("Can't execute the query:\n", e);
       return;
     }
+  },
+
+  selectWhere: (selectWhere = async (params) => {
+    const client = await getClient();
+    const query = addQueryParams(
+      queries.SELECTS.get(properties.SELECT_WHERE),
+      params
+    );
+
+    try {
+      const entries = await client.query(query);
+      logQuery(query, params);
+
+      console.log(`Database entries: ${entries.rowCount} row(s)`);
+
+      await client.end();
+
+      return entries.rows[0];
+    } catch (e) {
+      logQuery(query, params);
+      console.log("Can't execute the query:\n", e);
+      return;
+    }
+  }),
+
+  gameAlreadyLoaded: async (game_id) => {
+    if (!Number.isInteger(game_id)) {
+      console.log("Invalid value for param 'game_id'");
+      return false;
+    }
+    const games = await selectWhere([properties.GAMES, "game_id", game_id]);
+    if (games) return true;
+    return false;
   },
 };

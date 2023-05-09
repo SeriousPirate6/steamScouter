@@ -16,6 +16,7 @@ module.exports = Object.freeze({
     ],
     [
       properties.GAMES,
+      // Add game name ASAP
       `CREATE TABLE IF NOT EXISTS ${properties.GAMES} (
           id SERIAL NOT NULL,
           game_id INTEGER NOT NULL,
@@ -64,6 +65,7 @@ module.exports = Object.freeze({
           ORDER BY date DESC
           LIMIT 1;`,
     ],
+    [properties.SELECT_WHERE, `SELECT * FROM $1 WHERE $2 = $3;`],
   ]),
 
   // DELETES
