@@ -91,21 +91,40 @@ app.post("/addGameMonitoring", async (req, res) => {
       await creates.createGames();
     }
     const games_added = [];
+    const games_id_not_valid = [];
+    const games_already_present = [];
     for await (id of game_ids) {
-      const game = await selects.gameAlreadyLoaded(id);
-      if (game) continue;
-      const value = await steam.getGameByAppID(`${id}`, properties.CURRENCIES);
-      price = value[id].type.price_overview;
-      await inserts.insertGames(id, price ? price.final : 0);
-      games_added.push(id);
+      const game_already_loaded = await selects.gameAlreadyLoaded(id);
+      switch (game_already_loaded) {
+        case properties.INVALID_GAME_ID:
+          games_id_not_valid.push(id);
+          continue;
+        case true:
+          games_already_present.push(id);
+          continue;
+        default:
+          const value = await steam.getGameByAppID(`${id}`, properties.EURO);
+          if (!value) {
+            games_id_not_valid.push(id);
+            continue;
+          }
+
+          const game = value[id].type;
+          await inserts.insertGames(
+            game.type,
+            game.name,
+            id,
+            game.is_free,
+            game.fullgame ? game.fullgame.appid : null,
+            game.header_image,
+            game.price_overview ? game.price_overview.final : 0
+          );
+          games_added.push(id);
+      }
     }
-    const games_already_present = game_ids.filter(
-      (game) => !games_added.includes(game)
-    );
     res.send({
       code: "success",
-      // TODO add possible invalid game_ids
-      message: { games_added, games_already_present },
+      message: { games_added, games_already_present, games_id_not_valid },
     });
   }
 });
@@ -115,10 +134,5 @@ app.get("/checkGamePrice", async () => {});
 // (async () => {
 //   await drops.deleteTable([properties.GAMES]);
 // })();
-
-(async () => {
-  const value = await selects.gameAlreadyLoaded(2328720);
-  console.log(value);
-})();
 
 app.listen(port, () => console.log(`App listening at ${port}`));

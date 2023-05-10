@@ -19,8 +19,13 @@ module.exports = Object.freeze({
       // Add game name ASAP
       `CREATE TABLE IF NOT EXISTS ${properties.GAMES} (
           id SERIAL NOT NULL,
+          type VARCHAR(20) NOT NULL,
+          name VARCHAR(200) NOT NULL,
           game_id INTEGER NOT NULL,
-          eur_price NUMERIC(10, 2),
+          is_free BOOLEAN NOT NULL,
+          fullgame_id INTEGER,
+          header_image VARCHAR(200) NOT NULL,
+          eur_price INTEGER,
           date TIMESTAMP NOT NULL DEFAULT current_timestamp,
         PRIMARY KEY (game_id)
       );`,
@@ -40,9 +45,10 @@ module.exports = Object.freeze({
     [
       properties.GAMES,
       `INSERT INTO ${properties.GAMES} (
-          game_id,
-          eur_price
-    	) VALUES ($1, $2);`,
+          type, name, game_id, is_free, fullgame_id, header_image, eur_price
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7
+      );`,
     ],
   ]),
 

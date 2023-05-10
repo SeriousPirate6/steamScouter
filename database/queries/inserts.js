@@ -21,11 +21,26 @@ module.exports = {
     await client.end();
   },
 
-  insertGames: async (game_id, eur_price) => {
-    // check if game provided is already present
+  insertGames: async (
+    type,
+    name,
+    game_id,
+    is_free,
+    fullgame_id,
+    image_header,
+    eur_price
+  ) => {
     const client = await getClient();
     const query = queries.INSERTS.get(properties.GAMES);
-    const params = [game_id, eur_price];
+    const params = [
+      type,
+      name,
+      game_id,
+      is_free,
+      fullgame_id,
+      image_header,
+      eur_price,
+    ];
 
     try {
       const insertRow = await client.query(query, params);

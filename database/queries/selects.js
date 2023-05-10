@@ -73,7 +73,7 @@ module.exports = {
   gameAlreadyLoaded: async (game_id) => {
     if (!Number.isInteger(game_id)) {
       console.log("Invalid value for param 'game_id'");
-      return false;
+      return properties.INVALID_GAME_ID;
     }
     const games = await selectWhere([properties.GAMES, "game_id", game_id]);
     if (games) return true;

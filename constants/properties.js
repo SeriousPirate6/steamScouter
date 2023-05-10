@@ -26,4 +26,7 @@ module.exports = Object.freeze({
   // TABLES
   CURRENCIES: "CURRENCIES",
   GAMES: "GAMES",
+
+  // MESSAGES
+  INVALID_GAME_ID: "GAME ID NOT VALID",
 });

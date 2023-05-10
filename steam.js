@@ -10,6 +10,7 @@ const filterData = (response) => {
   dataFiltered["type"] = data["type"];
   dataFiltered["name"] = data["name"];
   dataFiltered["steam_appid"] = data["steam_appid"];
+  dataFiltered["is_free"] = data["is_free"];
   dataFiltered["fullgame"] = data["fullgame"];
   dataFiltered["header_image"] = data["header_image"];
   dataFiltered["website"] = data["website"];
