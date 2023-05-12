@@ -4,30 +4,37 @@ module.exports = Object.freeze({
   // CREATES
   CREATES: new Map([
     [
-      properties.CURRENCIES,
-      `CREATE TABLE IF NOT EXISTS ${properties.CURRENCIES} (
-          id SERIAL NOT NULL,
-          from_begin VARCHAR(3) NOT NULL,
-          to_end VARCHAR(3) NOT NULL,
-          value NUMERIC(10, 2),
-          date TIMESTAMP NOT NULL DEFAULT current_timestamp,
-        PRIMARY KEY (id, from_begin, to_end)
+      properties.CONVERSIONS,
+      `CREATE TABLE IF NOT EXISTS ${properties.CONVERSIONS} (
+          ${properties.DEFAULT_FIELDS.id} SERIAL NOT NULL,
+          ${properties.CONVERSIONS_FIELDS.from} VARCHAR(3) NOT NULL,
+          ${properties.CONVERSIONS_FIELDS.to} VARCHAR(3) NOT NULL,
+          ${properties.CONVERSIONS_FIELDS.to_fullname} VARCHAR(50) NOT NULL,
+          ${properties.CONVERSIONS_FIELDS.to_region} VARCHAR(50) NOT NULL,
+          ${properties.CONVERSIONS_FIELDS.value} NUMERIC(10, 2),
+          ${properties.DEFAULT_FIELDS.date} TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (
+            ${properties.DEFAULT_FIELDS.id},
+            ${properties.CONVERSIONS_FIELDS.from},
+            ${properties.CONVERSIONS_FIELDS.to}
+          )
       );`,
     ],
     [
       properties.GAMES,
       // Add game name ASAP
       `CREATE TABLE IF NOT EXISTS ${properties.GAMES} (
-          id SERIAL NOT NULL,
-          type VARCHAR(20) NOT NULL,
-          name VARCHAR(200) NOT NULL,
-          game_id INTEGER NOT NULL,
-          is_free BOOLEAN NOT NULL,
-          fullgame_id INTEGER,
-          header_image VARCHAR(200) NOT NULL,
-          eur_price INTEGER,
-          date TIMESTAMP NOT NULL DEFAULT current_timestamp,
-        PRIMARY KEY (game_id)
+          ${properties.DEFAULT_FIELDS.id} SERIAL NOT NULL,
+          ${properties.GAMES_FIELDS.type} VARCHAR(20) NOT NULL,
+          ${properties.GAMES_FIELDS.game_name} VARCHAR(200) NOT NULL,
+          ${properties.GAMES_FIELDS.game_id} INTEGER NOT NULL,
+          ${properties.GAMES_FIELDS.is_free} BOOLEAN NOT NULL,
+          ${properties.GAMES_FIELDS.fullgame_id} INTEGER,
+          ${properties.GAMES_FIELDS.header_image} VARCHAR(200) NOT NULL,
+          ${properties.GAMES_FIELDS.eur_price.initial} INTEGER,
+          ${properties.GAMES_FIELDS.eur_price.final} INTEGER,
+          ${properties.DEFAULT_FIELDS.date} TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (${properties.GAMES_FIELDS.game_id})
       );`,
     ],
   ]),
@@ -35,25 +42,50 @@ module.exports = Object.freeze({
   // INSERT
   INSERTS: new Map([
     [
-      properties.CURRENCIES,
-      `INSERT INTO ${properties.CURRENCIES} (
-          from_begin,
-          to_end,
-          value
-    	) VALUES ($1, $2, $3);`,
+      properties.CONVERSIONS,
+      `INSERT INTO ${properties.CONVERSIONS} (
+          ${properties.CONVERSIONS_FIELDS.from},
+          ${properties.CONVERSIONS_FIELDS.to},
+          ${properties.CONVERSIONS_FIELDS.to_fullname},
+          ${properties.CONVERSIONS_FIELDS.to_region},
+          ${properties.CONVERSIONS_FIELDS.value}
+    	) VALUES ($1, $2, $3, $4, $5);`,
     ],
     [
       properties.GAMES,
       `INSERT INTO ${properties.GAMES} (
-          type, name, game_id, is_free, fullgame_id, header_image, eur_price
+          ${properties.GAMES_FIELDS.type},
+          ${properties.GAMES_FIELDS.game_name},
+          ${properties.GAMES_FIELDS.game_id},
+          ${properties.GAMES_FIELDS.is_free},
+          ${properties.GAMES_FIELDS.fullgame_id},
+          ${properties.GAMES_FIELDS.header_image},
+          ${properties.GAMES_FIELDS.eur_price.initial},
+          ${properties.GAMES_FIELDS.eur_price.final}
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7
+        $1, $2, $3, $4, $5, $6, $7, $8
       );`,
     ],
   ]),
 
+  // UPDATES
+  UPDATES: new Map([
+    [
+      properties.UPDATE_PRICES,
+      `UPDATE ${properties.GAMES}
+      SET (
+        ${properties.GAMES_FIELDS.eur_price.initial},
+        ${properties.GAMES_FIELDS.eur_price.final},
+        ${properties.DEFAULT_FIELDS.date}
+      ) = (
+        $1, $2, CURRENT_TIMESTAMP
+      )
+      WHERE ${properties.GAMES_FIELDS.game_id} = $2`,
+    ],
+  ]),
+
   // SELECTS
-  SELECTS: new Map([
+  SELECTS: (selects = new Map([
     [properties.SELECT_ALL, `SELECT * FROM $1`],
     [
       properties.SELECT_EXISTS,
@@ -65,20 +97,28 @@ module.exports = Object.freeze({
     ],
     [
       properties.SELECT_LASTEST_CUR_VAL,
-      `SELECT value FROM ${properties.CURRENCIES}
-          WHERE from_begin = $1
-          AND to_end = $2
-          ORDER BY date DESC
-          LIMIT 1;`,
+      `SELECT
+          ${properties.CONVERSIONS_FIELDS.to},
+          ${properties.CONVERSIONS_FIELDS.value}
+          FROM (
+            SELECT DISTINCT
+              ${properties.CONVERSIONS_FIELDS.from},
+              ${properties.CONVERSIONS_FIELDS.to},
+              ${properties.CONVERSIONS_FIELDS.value},
+              ${properties.DEFAULT_FIELDS.date}
+            FROM ${properties.CONVERSIONS}
+            ORDER BY ${properties.DEFAULT_FIELDS.date} DESC
+          ) AS CURRENCIES_TO
+          WHERE ${properties.CONVERSIONS_FIELDS.from} = $1`,
     ],
     [properties.SELECT_WHERE, `SELECT * FROM $1 WHERE $2 = $3;`],
-  ]),
+  ])),
 
   // DELETES
   DELETES: new Map([
     [
-      properties.CURRENCIES,
-      `DELETE FROM ${properties.CURRENCIES}
+      properties.CONVERSIONS,
+      `DELETE FROM ${properties.CONVERSIONS}
           WHERE $1 = $2;`,
     ],
     [

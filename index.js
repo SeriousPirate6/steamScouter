@@ -10,6 +10,8 @@ const { selectAll } = require("./database/queries/selects");
 const { formatQueryResult } = require("./utility/format_result");
 const { doesTableExists } = require("./utility/check_table");
 const selects = require("./database/queries/selects");
+const updates = require("./database/queries/updates");
+const currencies = require("./constants/currencies");
 
 const app = express();
 
@@ -26,12 +28,18 @@ app.get("/getPriceConversion", async (req, res) => {
       message: "required params: to",
     });
   } else {
+    if (!Object.keys(currencies).find((e) => e === to)) {
+      res.status(400).send({
+        status: "bad request",
+        message: "invalid param: 'to'",
+      });
+    }
     const value = (await price_converter.convertToEUR(to)).data;
     try {
-      if (await doesTableExists(properties.CURRENCIES)) {
-        await creates.createCurrencies();
+      if (!(await doesTableExists(properties.CONVERSIONS))) {
+        await creates.createConversions();
       }
-      await inserts.insertCurrencies("EUR", to, value.result);
+      await inserts.insertConversions("EUR", to, value.result);
       res.send(value);
     } catch (e) {
       console.log(e);
@@ -103,7 +111,10 @@ app.post("/addGameMonitoring", async (req, res) => {
           games_already_present.push(id);
           continue;
         default:
-          const value = await steam.getGameByAppID(`${id}`, properties.EURO);
+          const value = await steam.getGameByAppID(
+            `${id}`,
+            Object.keys(currencies).find((e) => e === "EUR")
+          );
           if (!value) {
             games_id_not_valid.push(id);
             continue;
@@ -117,6 +128,7 @@ app.post("/addGameMonitoring", async (req, res) => {
             game.is_free,
             game.fullgame ? game.fullgame.appid : null,
             game.header_image,
+            game.price_overview ? game.price_overview.initial : 0,
             game.price_overview ? game.price_overview.final : 0
           );
           games_added.push(id);
@@ -129,10 +141,27 @@ app.post("/addGameMonitoring", async (req, res) => {
   }
 });
 
-app.get("/checkGamePrice", async () => {});
+// TODO test this function
+app.get("/checkGamePrice", async () => {
+  const games = await selects.selectAll([properties.GAMES]);
+  const conversions = selects.selectLastCurrencyValue([currencies.EUR.code]);
+  const prices = [];
+  for await (g of games) {
+    const id = g.game_id;
+    await updates.updateGamesPrices(id);
+    for await (conv of conversions) {
+      const value = await steam.getGameByAppID(
+        id,
+        conv[properties.CONVERSIONS_FIELDS.to]
+      );
+      const price = value[id].type.price_overview.final;
+      prices.push({ game: g.fullgame });
+    }
+  }
+});
 
-// (async () => {
-//   await drops.deleteTable([properties.GAMES]);
-// })();
+(async () => {
+  // await drops.deleteTable([properties.GAMES]);
+})();
 
 app.listen(port, () => console.log(`App listening at ${port}`));

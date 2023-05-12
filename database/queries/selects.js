@@ -39,7 +39,8 @@ module.exports = {
 
       await client.end();
 
-      return parseFloat(Object.values(entries.rows[0])[0]);
+      if (!entries.rows[0]) return null;
+      return parseFloat(Object.values(entries.rows));
     } catch (e) {
       logQuery(query, params);
       console.log("Can't execute the query:\n", e);

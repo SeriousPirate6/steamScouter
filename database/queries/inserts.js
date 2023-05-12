@@ -2,12 +2,19 @@ const properties = require("../../constants/properties");
 const queries = require("../../constants/queries");
 const { getClient } = require("../connection");
 const { logQuery } = require("../../utility/log_query");
+const currencies = require("../../constants/currencies").default;
 
 module.exports = {
-  insertCurrencies: async (from_begin, to_end, value) => {
+  insertConversions: async (from_begin, to, value) => {
     const client = await getClient();
-    const query = queries.INSERTS.get(properties.CURRENCIES);
-    const params = [from_begin, to_end, value];
+    const query = queries.INSERTS.get(properties.CONVERSIONS);
+    const params = [
+      from_begin,
+      to,
+      currencies[to].currency_name,
+      currencies[to].region,
+      value,
+    ];
 
     try {
       const insertRow = await client.query(query, params);
@@ -28,7 +35,8 @@ module.exports = {
     is_free,
     fullgame_id,
     image_header,
-    eur_price
+    eur_price_initial,
+    eur_price_final
   ) => {
     const client = await getClient();
     const query = queries.INSERTS.get(properties.GAMES);
@@ -39,7 +47,8 @@ module.exports = {
       is_free,
       fullgame_id,
       image_header,
-      eur_price,
+      eur_price_initial,
+      eur_price_final,
     ];
 
     try {

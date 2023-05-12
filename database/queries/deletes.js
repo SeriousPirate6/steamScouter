@@ -4,9 +4,9 @@ const { getClient } = require("../connection");
 const { logQuery } = require("../../utility/log_query");
 
 module.exports = {
-  deleteCurrencies: async (field, value) => {
+  deleteConversions: async (field, value) => {
     const client = await getClient();
-    const query = queries.DELETES.get(properties.CURRENCIES);
+    const query = queries.DELETES.get(properties.CONVERSIONS);
     const params = [field, value];
 
     try {

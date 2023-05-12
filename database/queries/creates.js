@@ -4,9 +4,9 @@ const { logQuery } = require("../../utility/log_query");
 const properties = require("../../constants/properties");
 
 module.exports = {
-  createCurrencies: async () => {
+  createConversions: async () => {
     const client = await getClient({ print: true });
-    const query = queries.CREATES.get(properties.CURRENCIES);
+    const query = queries.CREATES.get(properties.CONVERSIONS);
     try {
       const res = await client.query(query);
       logQuery(query);
