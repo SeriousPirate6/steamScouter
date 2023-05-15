@@ -2,7 +2,7 @@ const properties = require("../../constants/properties");
 const queries = require("../../constants/queries");
 const { getClient } = require("../connection");
 const { logQuery } = require("../../utility/log_query");
-const currencies = require("../../constants/currencies").default;
+const currencies = require("../../constants/currencies");
 
 module.exports = {
   insertConversions: async (from_begin, to, value) => {

@@ -74,11 +74,10 @@ module.exports = Object.freeze({
       properties.UPDATE_PRICES,
       `UPDATE ${properties.GAMES}
       SET (
-        ${properties.GAMES_FIELDS.eur_price.initial},
         ${properties.GAMES_FIELDS.eur_price.final},
         ${properties.DEFAULT_FIELDS.date}
       ) = (
-        $1, $2, CURRENT_TIMESTAMP
+        $1, CURRENT_TIMESTAMP
       )
       WHERE ${properties.GAMES_FIELDS.game_id} = $2`,
     ],

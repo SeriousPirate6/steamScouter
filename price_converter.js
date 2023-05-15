@@ -2,8 +2,7 @@ require("dotenv").config();
 
 const axios = require("axios");
 const properties = require("./constants/properties");
-const currencies = require("./constants/currencies").default;
-const { varToString } = require("./utility/json_utils");
+const currencies = require("./constants/currencies");
 
 const convertCurrency = async (from, to, amount) => {
   try {

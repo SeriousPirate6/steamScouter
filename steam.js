@@ -1,5 +1,4 @@
 const axios = require("axios");
-const { json_utils } = require("./utility/json_utils");
 const properties = require("./constants/properties");
 
 const filterData = (response) => {
@@ -28,14 +27,14 @@ const filterMultiData = (response) => {
 
 const steam = {
   getGameByAppID: async (appids, countryCode) => {
-    const appids_list = appids.split(",");
+    const appids_list = String(appids).split(",");
     try {
       const response = await axios.get(
         `${properties.STEAM_API_URL}/appdetails`,
         {
           params: {
             appids,
-            cc: countryCode,
+            cc: countryCode.substring(0, 2), // Steam wants only the first two chars of the country-code
             filters:
               appids_list.length > 1
                 ? "price_overview"

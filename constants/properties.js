@@ -7,6 +7,9 @@ module.exports = Object.freeze({
   LOCAL_ENV: "LOCAL",
   RENDER_ENV: "RENDER",
 
+  // DEFAULT CONVERSION
+  DEFAULT_CURRENCY: "EUR",
+
   // TABLES TYPES
   SELECT_ALL: "SELECT_ALL",
   DROP_TABLE: "DROP_TABLE",

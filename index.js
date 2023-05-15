@@ -12,6 +12,7 @@ const { doesTableExists } = require("./utility/check_table");
 const selects = require("./database/queries/selects");
 const updates = require("./database/queries/updates");
 const currencies = require("./constants/currencies");
+const { sendMail } = require("./mail/sendmail");
 
 const app = express();
 
@@ -39,7 +40,11 @@ app.get("/getPriceConversion", async (req, res) => {
       if (!(await doesTableExists(properties.CONVERSIONS))) {
         await creates.createConversions();
       }
-      await inserts.insertConversions("EUR", to, value.result);
+      await inserts.insertConversions(
+        properties.DEFAULT_CURRENCY,
+        to,
+        value.result
+      );
       res.send(value);
     } catch (e) {
       console.log(e);
@@ -112,7 +117,7 @@ app.post("/addGameMonitoring", async (req, res) => {
           continue;
         default:
           const value = await steam.getGameByAppID(
-            `${id}`,
+            id,
             Object.keys(currencies).find((e) => e === "EUR")
           );
           if (!value) {
@@ -141,12 +146,16 @@ app.post("/addGameMonitoring", async (req, res) => {
   }
 });
 
-// TODO test this function
-app.get("/checkGamePrice", async () => {
-  const games = await selects.selectAll([properties.GAMES]);
-  const conversions = selects.selectLastCurrencyValue([currencies.EUR.code]);
-  const prices = [];
+app.get("/checkGamePrice", async ({ res }) => {
+  const games = (await selects.selectAll([properties.GAMES])).rows;
+  const conversions = await selects.selectLastCurrencyValue([
+    currencies[properties.DEFAULT_CURRENCY].code,
+  ]);
+  const prices_list = [];
   for await (g of games) {
+    if (g.is_free) continue;
+    let body_string = `${g.name}\n`;
+    const price_per_game = [];
     const id = g.game_id;
     await updates.updateGamesPrices(id);
     for await (conv of conversions) {
@@ -154,10 +163,42 @@ app.get("/checkGamePrice", async () => {
         id,
         conv[properties.CONVERSIONS_FIELDS.to]
       );
-      const price = value[id].type.price_overview.final;
-      prices.push({ game: g.fullgame });
+      const price = value[id].type.price_overview;
+      if (!price) continue;
+      if (price.final === price.initial) continue;
+
+      const price_converted = (
+        price.final /
+        conv[properties.CONVERSIONS_FIELDS.value] /
+        100
+      ).toFixed(2);
+
+      body_string += `\n${
+        conv[properties.CONVERSIONS_FIELDS.to]
+      }: ${price_converted} ${properties.DEFAULT_CURRENCY}`;
+
+      price_per_game.push({
+        currency: conv[properties.CONVERSIONS_FIELDS.to],
+        price_converted,
+      });
+    }
+    if (price_per_game.length > 0) {
+      prices_list.push({
+        id,
+        name: g.name,
+        change_in_price: price_per_game,
+      });
+      await sendMail(
+        `STEAM - PRICE CHANGE: ${g.name}`,
+        body_string,
+        process.env.EMAIL_TO
+      );
     }
   }
+  res.send({
+    code: "success",
+    message: prices_list.length > 0 ? prices_list : "no changes detected",
+  });
 });
 
 (async () => {

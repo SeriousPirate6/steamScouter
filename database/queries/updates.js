@@ -1,21 +1,21 @@
-const properties = require("../../constants/properties");
-const queries = require("../../constants/queries");
+const { steam } = require("../../steam");
 const { getClient } = require("../connection");
+const queries = require("../../constants/queries");
+const properties = require("../../constants/properties");
+const currencies = require("../../constants/currencies");
 const { logQuery, addQueryParams } = require("../../utility/log_query");
-const selects = require("./selects");
-const currencies = require("../../constants/currencies").default;
 
 module.exports = {
   updateGamesPrices: async (game_id) => {
     const value = await steam.getGameByAppID(
-      `${game_id}`,
-      Object.keys(currencies).find((e) => e === "EUR")
+      game_id,
+      Object.keys(currencies).find((e) => e === properties.DEFAULT_CURRENCY)
     );
-    if (!value[id].type.price_overview) {
+    if (!value[game_id].type.price_overview) {
       console.log(`No price found for game_id: ${game_id}`);
       return;
     }
-    const eur_price_final = value[id].type.price_overview.final;
+    const eur_price_final = value[game_id].type.price_overview.final;
     const params = [eur_price_final, game_id];
 
     const client = await getClient();
