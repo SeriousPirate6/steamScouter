@@ -1,12 +1,12 @@
 const queries = require("../constants/queries");
 const properties = require("../constants/properties");
 const { getClient } = require("../database/connection");
-const { logQuery, addQueryParams } = require("./log_query");
+const { logQuery } = require("./log_query");
 
 module.exports = {
   doesTableExists: async (table) => {
     const client = await getClient();
-    const query = queries.SELECTS.get(properties.SELECT_EXISTS);
+    const query = queries.SELECTS.get(properties.IF_EXISTS);
     const params = [table.toLowerCase()];
 
     try {

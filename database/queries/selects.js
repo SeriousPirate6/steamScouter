@@ -2,18 +2,16 @@ const properties = require("../../constants/properties");
 const queries = require("../../constants/queries");
 const { getClient } = require("../connection");
 const { logQuery, addQueryParams } = require("../../utility/log_query");
+const { isJSON } = require("../../utility/json_utils");
 
 module.exports = {
   selectAll: async (params) => {
     const client = await getClient();
-    const query = addQueryParams(
-      queries.SELECTS.get(properties.SELECT_ALL),
-      params
-    );
+    const query = addQueryParams(queries.SELECTS.get(properties.ALL), params);
 
     try {
       const entries = await client.query(query);
-      logQuery(query, params);
+      logQuery(query);
 
       console.log(`Database entries: ${entries.rowCount} row(s)`);
 
@@ -21,7 +19,7 @@ module.exports = {
 
       return entries;
     } catch (e) {
-      logQuery(query, params);
+      logQuery(query);
       console.log("Can't execute the query:\n", e);
       return;
     }
@@ -29,7 +27,7 @@ module.exports = {
 
   selectLastCurrencyValue: async (params) => {
     const client = await getClient();
-    const query = queries.SELECTS.get(properties.SELECT_LASTEST_CUR_VAL);
+    const query = queries.SELECTS.get(properties.LASTEST_CUR_VAL);
 
     try {
       const entries = await client.query(query, params);
@@ -48,16 +46,27 @@ module.exports = {
     }
   },
 
-  selectWhere: (selectWhere = async (params) => {
+  selectWhere: (selectWhere = async (table, pre_conditions) => {
+    let conditions = "";
+
+    if (!isJSON(String(pre_conditions))) {
+      console.log("Required JSON object as second param");
+      return;
+    }
+    Object.keys(pre_conditions).forEach((key, i) => {
+      conditions +=
+        i > 0
+          ? ` AND ${key} = '${pre_conditions[key]}'`
+          : `${key} = '${pre_conditions[key]}'`;
+    });
+
+    const params = [table, conditions];
     const client = await getClient();
-    const query = addQueryParams(
-      queries.SELECTS.get(properties.SELECT_WHERE),
-      params
-    );
+    const query = addQueryParams(queries.SELECTS.get(properties.WHERE), params);
 
     try {
       const entries = await client.query(query);
-      logQuery(query, params);
+      logQuery(query);
 
       console.log(`Database entries: ${entries.rowCount} row(s)`);
 
@@ -65,7 +74,7 @@ module.exports = {
 
       return entries.rows[0];
     } catch (e) {
-      logQuery(query, params);
+      logQuery(query);
       console.log("Can't execute the query:\n", e);
       return;
     }
@@ -76,7 +85,7 @@ module.exports = {
       console.log("Invalid value for param 'game_id'");
       return properties.INVALID_GAME_ID;
     }
-    const games = await selectWhere([properties.GAMES, "game_id", game_id]);
+    const games = await selectWhere(properties.GAMES, { game_id });
     if (games) return true;
     return false;
   },

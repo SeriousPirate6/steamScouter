@@ -1,18 +1,18 @@
 const express = require("express");
 const { steam } = require("./steam");
 const bodyParser = require("body-parser");
+const { sendMail } = require("./mail/sendmail");
 const drops = require("./database/queries/drops");
+const currencies = require("./constants/currencies");
 const properties = require("./constants/properties");
 const inserts = require("./database/queries/inserts");
 const creates = require("./database/queries/creates");
-const { price_converter } = require("./price_converter");
-const { selectAll } = require("./database/queries/selects");
-const { formatQueryResult } = require("./utility/format_result");
-const { doesTableExists } = require("./utility/check_table");
 const selects = require("./database/queries/selects");
 const updates = require("./database/queries/updates");
-const currencies = require("./constants/currencies");
-const { sendMail } = require("./mail/sendmail");
+const { selectAll } = require("./database/queries/selects");
+const { doesTableExists } = require("./utility/check_table");
+const { formatQueryResult } = require("./utility/format_result");
+const { insertOrUpdateConversions } = require("./price_converter");
 
 const app = express();
 
@@ -21,39 +21,12 @@ const port = 3000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-app.get("/getPriceConversion", async (req, res) => {
-  const to = req.query.to;
-  if (!to) {
-    res.status(400).send({
-      status: "bad request",
-      message: "required params: to",
-    });
-  } else {
-    if (!Object.keys(currencies).find((e) => e === to)) {
-      res.status(400).send({
-        status: "bad request",
-        message: "invalid param: 'to'",
-      });
-    }
-    const value = (await price_converter.convertToEUR(to)).data;
-    try {
-      if (!(await doesTableExists(properties.CONVERSIONS))) {
-        await creates.createConversions();
-      }
-      await inserts.insertConversions(
-        properties.DEFAULT_CURRENCY,
-        to,
-        value.result
-      );
-      res.send(value);
-    } catch (e) {
-      console.log(e);
-      res
-        .status(500)
-        .send({ code: "500", message: "Record uploading in DB failed." });
-    }
-  }
-});
+app.post(
+  "/addCurrencyValue",
+  async (req, res) => await insertOrUpdateConversions(req, res)
+);
+
+app.patch("/updateCurrencyValues", async (req, res) => {});
 
 app.get("/getGameById", async (req, res) => {
   if (!req.query.appids || !req.query.countryCode) {
@@ -203,6 +176,7 @@ app.get("/checkGamePrice", async ({ res }) => {
 
 (async () => {
   // await drops.deleteTable([properties.GAMES]);
+  // await drops.deleteTable([properties.CONVERSIONS]);
 })();
 
 app.listen(port, () => console.log(`App listening at ${port}`));

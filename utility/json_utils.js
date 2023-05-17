@@ -1,14 +1,12 @@
 module.exports = {
-  json_utils: {
-    isJSON: (input) => {
-      try {
-        JSON.parse(input);
-      } catch (e) {
-        return false;
-      }
-      return true;
-    },
-  },
+  isJSON: (isJSON = (input) => {
+    try {
+      JSON.parse(input);
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }),
 
   varToString: (varObj) => {
     Object.keys(varObj)[0];

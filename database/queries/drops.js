@@ -7,17 +7,17 @@ module.exports = {
   deleteTable: async (table) => {
     const client = await getClient();
     const query = addQueryParams(
-      queries.DROPS.get(properties.DROP_TABLE),
+      queries.DROPS.get(properties.GENERIC_TABLE),
       table
     );
 
     try {
       await client.query(query);
-      logQuery(query, table);
+      logQuery(query);
 
       console.log(`Table ${table} dropped`);
     } catch (e) {
-      logQuery(query, table);
+      logQuery(query);
       console.log(`Can't drop table ${table}:\n`, e);
     }
     await client.end();

@@ -14,7 +14,6 @@ module.exports = Object.freeze({
           ${properties.CONVERSIONS_FIELDS.value} NUMERIC(10, 2),
           ${properties.DEFAULT_FIELDS.date} TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
           PRIMARY KEY (
-            ${properties.DEFAULT_FIELDS.id},
             ${properties.CONVERSIONS_FIELDS.from},
             ${properties.CONVERSIONS_FIELDS.to}
           )
@@ -33,6 +32,7 @@ module.exports = Object.freeze({
           ${properties.GAMES_FIELDS.header_image} VARCHAR(200) NOT NULL,
           ${properties.GAMES_FIELDS.eur_price.initial} INTEGER,
           ${properties.GAMES_FIELDS.eur_price.final} INTEGER,
+          ${properties.GAMES_FIELDS.been_watched} BOOLEAN NOT NULL DEFAULT TRUE,
           ${properties.DEFAULT_FIELDS.date} TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
           PRIMARY KEY (${properties.GAMES_FIELDS.game_id})
       );`,
@@ -49,7 +49,9 @@ module.exports = Object.freeze({
           ${properties.CONVERSIONS_FIELDS.to_fullname},
           ${properties.CONVERSIONS_FIELDS.to_region},
           ${properties.CONVERSIONS_FIELDS.value}
-    	) VALUES ($1, $2, $3, $4, $5);`,
+    	) VALUES (
+        '$1', '$2', '$3', '$4', $5
+        ) ON CONFLICT DO NOTHING;`,
     ],
     [
       properties.GAMES,
@@ -64,14 +66,14 @@ module.exports = Object.freeze({
           ${properties.GAMES_FIELDS.eur_price.final}
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8
-      );`,
+      ) ON CONFLICT DO NOTHING;`,
     ],
   ]),
 
   // UPDATES
   UPDATES: new Map([
     [
-      properties.UPDATE_PRICES,
+      properties.GAMES_PRICES,
       `UPDATE ${properties.GAMES}
       SET (
         ${properties.GAMES_FIELDS.eur_price.final},
@@ -81,13 +83,35 @@ module.exports = Object.freeze({
       )
       WHERE ${properties.GAMES_FIELDS.game_id} = $2`,
     ],
+    [
+      properties.GAMES_STATUS,
+      `UPDATE ${properties.GAMES}
+      SET (
+        ${properties.GAMES_FIELDS.been_watched}
+      ) = (
+        $1
+      )
+      WHERE ${properties.GAMES_FIELDS.game_id} = $2`,
+    ],
+    [
+      properties.CONVERSIONS_VALUE,
+      `UPDATE ${properties.CONVERSIONS}
+      SET (
+        ${properties.CONVERSIONS_FIELDS.value},
+        ${properties.DEFAULT_FIELDS.date}
+      ) = (
+        $1, CURRENT_TIMESTAMP
+      )
+      WHERE ${properties.CONVERSIONS_FIELDS.from} = '$2'
+      AND ${properties.CONVERSIONS_FIELDS.to} = '$3'`,
+    ],
   ]),
 
   // SELECTS
   SELECTS: (selects = new Map([
-    [properties.SELECT_ALL, `SELECT * FROM $1`],
+    [properties.ALL, `SELECT * FROM $1`],
     [
-      properties.SELECT_EXISTS,
+      properties.IF_EXISTS,
       `SELECT EXISTS (
           SELECT FROM pg_tables
           WHERE schemaname = 'public'
@@ -95,22 +119,14 @@ module.exports = Object.freeze({
       );`,
     ],
     [
-      properties.SELECT_LASTEST_CUR_VAL,
-      `SELECT
+      properties.LASTEST_CUR_VAL,
+      `SELECT DISTINCT
           ${properties.CONVERSIONS_FIELDS.to},
           ${properties.CONVERSIONS_FIELDS.value}
-          FROM (
-            SELECT DISTINCT
-              ${properties.CONVERSIONS_FIELDS.from},
-              ${properties.CONVERSIONS_FIELDS.to},
-              ${properties.CONVERSIONS_FIELDS.value},
-              ${properties.DEFAULT_FIELDS.date}
-            FROM ${properties.CONVERSIONS}
-            ORDER BY ${properties.DEFAULT_FIELDS.date} DESC
-          ) AS CURRENCIES_TO
+          FROM ${properties.CONVERSIONS}
           WHERE ${properties.CONVERSIONS_FIELDS.from} = $1`,
     ],
-    [properties.SELECT_WHERE, `SELECT * FROM $1 WHERE $2 = $3;`],
+    [properties.WHERE, `SELECT * FROM $1 WHERE $2;`],
   ])),
 
   // DELETES
@@ -128,5 +144,5 @@ module.exports = Object.freeze({
   ]),
 
   // DROPS
-  DROPS: new Map([[properties.DROP_TABLE, `DROP TABLE $1;`]]),
+  DROPS: new Map([[properties.GENERIC_TABLE, `DROP TABLE IF EXISTS $1;`]]),
 });

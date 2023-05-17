@@ -20,13 +20,13 @@ module.exports = {
 
     const client = await getClient();
     const query = addQueryParams(
-      queries.UPDATES.get(properties.UPDATE_PRICES),
+      queries.UPDATES.get(properties.GAMES_PRICES),
       params
     );
 
     try {
       const entries = await client.query(query);
-      logQuery(query, params);
+      logQuery(query);
 
       console.log(`Database updated: ${entries.rowCount} row(s)`);
 
@@ -34,7 +34,31 @@ module.exports = {
 
       return entries;
     } catch (e) {
-      logQuery(query, params);
+      logQuery(query);
+      console.log("Can't execute the query:\n", e);
+      return;
+    }
+  },
+  updateGamesStatus: async (game_id, been_watched) => {
+    const params = [game_id, been_watched];
+
+    const client = await getClient();
+    const query = addQueryParams(
+      queries.UPDATES.get(properties.GAMES_STATUS),
+      params
+    );
+
+    try {
+      const entries = await client.query(query);
+      logQuery(query);
+
+      console.log(`Database updated: ${entries.rowCount} row(s)`);
+
+      await client.end();
+
+      return entries;
+    } catch (e) {
+      logQuery(query);
       console.log("Can't execute the query:\n", e);
       return;
     }
