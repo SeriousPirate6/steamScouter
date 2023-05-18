@@ -39,7 +39,7 @@ module.exports = {
     );
   }),
 
-  insertOrUpdateConversions: async (req, res) => {
+  addCurrencyValue: async (req, res) => {
     req.setTimeout(properties.DEFAULT_TIMEOUT, function () {
       res.send({ code: "error", message: "Request timeout reached..." });
     });
@@ -56,24 +56,30 @@ module.exports = {
           message: "invalid param: 'to'",
         });
       } else {
-        const value = (await convertToEUR(to)).data;
-        try {
-          if (!(await doesTableExists(properties.CONVERSIONS))) {
-            await creates.createConversions();
-          }
-          await inserts.insertOrUpdateConversions(
-            properties.DEFAULT_CURRENCY,
-            to,
-            value.result
-          );
-          res.send(value);
-        } catch (e) {
-          console.log(e);
-          res
-            .status(500)
-            .send({ code: "500", message: "Record uploading in DB failed." });
-        }
+        const value = (await convertToEUR(to)).data.result;
+        const addedValue = await insertOrUpdateConversions(to, value);
+        addedValue
+          ? res.send(addedValue)
+          : res
+              .status(500)
+              .send({ code: "500", message: "Record uploading in DB failed." });
       }
     }
   },
+  insertOrUpdateConversions: (insertOrUpdateConversions = async (to, value) => {
+    try {
+      if (!(await doesTableExists(properties.CONVERSIONS))) {
+        await creates.createConversions();
+      }
+      await inserts.insertOrUpdateConversions(
+        properties.DEFAULT_CURRENCY,
+        to,
+        value
+      );
+      return value;
+    } catch (e) {
+      console.log(e);
+      return;
+    }
+  }),
 };

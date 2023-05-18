@@ -49,7 +49,7 @@ module.exports = {
   selectWhere: (selectWhere = async (table, pre_conditions) => {
     let conditions = "";
 
-    if (!isJSON(String(pre_conditions))) {
+    if (!isJSON(pre_conditions)) {
       console.log("Required JSON object as second param");
       return;
     }

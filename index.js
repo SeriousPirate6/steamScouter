@@ -12,7 +12,10 @@ const updates = require("./database/queries/updates");
 const { selectAll } = require("./database/queries/selects");
 const { doesTableExists } = require("./utility/check_table");
 const { formatQueryResult } = require("./utility/format_result");
-const { insertOrUpdateConversions } = require("./price_converter");
+const {
+  addCurrencyValue,
+  insertOrUpdateConversions,
+} = require("./price_converter");
 
 const app = express();
 
@@ -23,10 +26,31 @@ app.use(bodyParser.json());
 
 app.post(
   "/addCurrencyValue",
-  async (req, res) => await insertOrUpdateConversions(req, res)
+  async (req, res) => await addCurrencyValue(req, res)
 );
 
-app.patch("/updateCurrencyValues", async (req, res) => {});
+app.patch("/updateCurrencyValues", async ({ res }) => {
+  const currencies = (await selects.selectAll([properties.CONVERSIONS])).rows;
+  const conversions = [];
+  for await (curr of currencies) {
+    if (
+      await insertOrUpdateConversions(
+        curr[properties.CONVERSIONS_FIELDS.to],
+        curr[properties.CONVERSIONS_FIELDS.value]
+      )
+    ) {
+      conversions.push({
+        from: curr[properties.CONVERSIONS_FIELDS.from],
+        to: curr[properties.CONVERSIONS_FIELDS.to],
+        value: curr[properties.CONVERSIONS_FIELDS.value],
+      });
+    }
+  }
+  res.send({
+    code: "success",
+    message: { conversions_count: currencies.length, conversions },
+  });
+});
 
 app.get("/getGameById", async (req, res) => {
   if (!req.query.appids || !req.query.countryCode) {

@@ -1,7 +1,7 @@
 module.exports = {
   isJSON: (isJSON = (input) => {
     try {
-      JSON.parse(input);
+      JSON.parse(JSON.stringify(input));
     } catch (e) {
       return false;
     }
