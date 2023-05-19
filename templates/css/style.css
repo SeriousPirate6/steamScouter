@@ -1,9 +1,9 @@
 body {
-    font-family: arial, sans-serif;
-    text-align: center;
+		font-family: arial, sans-serif;
+		text-align: center;
 }
 
-div {
+div.container {
     overflow-y: auto;
     height: 100%;
     position: sticky;
@@ -17,6 +17,11 @@ h2 {
 table {
     border-collapse: collapse;
     width: 100%;
+    table-layout: fixed;
+}
+
+table.conversions {
+    max-width: 400px;
 }
 
 th {
@@ -26,11 +31,17 @@ th {
 }
 
 td, th {
-    padding: 8px;
+    padding: 5px;
     text-align: center;
     border: 1px solid #dddddd;
+    word-wrap: break-word;
+    width: 100px
 }
 
 tr:nth-child(even) {
     background-color: #dddddd;
+}
+
+p.ex1 {
+    max-width: 500px;
 }

@@ -77,7 +77,8 @@ app.get("/getFromRedis", async (req, res) => {
   } else {
     if (Array.isArray(table)) table = table[0];
     if (await doesTableExists(table)) {
-      const result = formatQueryResult(table, await selectAll([table]));
+      const selectResult = await selectAll([table]);
+      const result = await formatQueryResult(table, selectResult);
       res.writeHead(200, { "Content-Type": "text/html" });
       res.end(result);
     } else {
@@ -149,6 +150,7 @@ app.get("/checkGamePrice", async ({ res }) => {
     currencies[properties.DEFAULT_CURRENCY].code,
   ]);
   const prices_list = [];
+  let mail_body = { fields: [], rows: [] };
   for await (g of games) {
     if (g.is_free) continue;
     let body_string = `${g.name}\n`;
@@ -185,9 +187,19 @@ app.get("/checkGamePrice", async ({ res }) => {
         name: g.name,
         change_in_price: price_per_game,
       });
+      const fields = Object.keys(price_per_game[0]).map((e) =>
+        JSON.parse(JSON.stringify({ name: e }))
+      );
+      mail_body.fields = fields;
+      mail_body.rows = price_per_game;
+      const formatted_mail_body = formatQueryResult({
+        entries: mail_body,
+        image: g.header_image,
+      });
+
       await sendMail(
         `STEAM - PRICE CHANGE: ${g.name}`,
-        body_string,
+        formatted_mail_body,
         process.env.EMAIL_TO
       );
     }
