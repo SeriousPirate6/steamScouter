@@ -85,8 +85,7 @@ module.exports = {
       console.log("Invalid value for param 'game_id'");
       return properties.INVALID_GAME_ID;
     }
-    const games = await selectWhere(properties.GAMES, { game_id });
-    if (games) return true;
-    return false;
+    const game = await selectWhere(properties.GAMES, { game_id });
+    return game ? game : false;
   },
 };

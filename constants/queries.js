@@ -21,7 +21,6 @@ module.exports = Object.freeze({
     ],
     [
       properties.GAMES,
-      // Add game name ASAP
       `CREATE TABLE IF NOT EXISTS ${properties.GAMES} (
           ${properties.DEFAULT_FIELDS.id} SERIAL NOT NULL,
           ${properties.GAMES_FIELDS.type} VARCHAR(20) NOT NULL,
@@ -75,35 +74,31 @@ module.exports = Object.freeze({
     [
       properties.GAMES_PRICES,
       `UPDATE ${properties.GAMES}
-      SET (
-        ${properties.GAMES_FIELDS.eur_price.final},
-        ${properties.DEFAULT_FIELDS.date}
-      ) = (
-        $1, CURRENT_TIMESTAMP
-      )
-      WHERE ${properties.GAMES_FIELDS.game_id} = $2`,
+        SET (
+          ${properties.GAMES_FIELDS.eur_price.final},
+          ${properties.DEFAULT_FIELDS.date}
+        ) = (
+          $1, CURRENT_TIMESTAMP
+        )
+        WHERE ${properties.GAMES_FIELDS.game_id} = $2`,
     ],
     [
       properties.GAMES_STATUS,
       `UPDATE ${properties.GAMES}
-      SET (
-        ${properties.GAMES_FIELDS.been_watched}
-      ) = (
-        $1
-      )
-      WHERE ${properties.GAMES_FIELDS.game_id} = $2`,
+        SET ${properties.GAMES_FIELDS.been_watched} = $1
+        WHERE ${properties.GAMES_FIELDS.game_id} = $2`,
     ],
     [
       properties.CONVERSIONS_VALUE,
       `UPDATE ${properties.CONVERSIONS}
-      SET (
-        ${properties.CONVERSIONS_FIELDS.value},
-        ${properties.DEFAULT_FIELDS.date}
-      ) = (
-        $1, CURRENT_TIMESTAMP
-      )
-      WHERE ${properties.CONVERSIONS_FIELDS.from} = '$2'
-      AND ${properties.CONVERSIONS_FIELDS.to} = '$3'`,
+        SET (
+          ${properties.CONVERSIONS_FIELDS.value},
+          ${properties.DEFAULT_FIELDS.date}
+        ) = (
+          $1, CURRENT_TIMESTAMP
+        )
+        WHERE ${properties.CONVERSIONS_FIELDS.from} = '$2'
+          AND ${properties.CONVERSIONS_FIELDS.to} = '$3'`,
     ],
   ]),
 
@@ -115,7 +110,7 @@ module.exports = Object.freeze({
       `SELECT EXISTS (
           SELECT FROM pg_tables
           WHERE schemaname = 'public'
-          AND tablename  = $1
+            AND tablename  = $1
       );`,
     ],
     [

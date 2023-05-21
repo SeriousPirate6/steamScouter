@@ -40,7 +40,8 @@ module.exports = {
     }
   },
   updateGamesStatus: async (game_id, been_watched) => {
-    const params = [game_id, been_watched];
+    // params must be in the order the query needs them
+    const params = [been_watched, game_id];
 
     const client = await getClient();
     const query = addQueryParams(

@@ -11,7 +11,10 @@ const selects = require("./database/queries/selects");
 const updates = require("./database/queries/updates");
 const { selectAll } = require("./database/queries/selects");
 const { doesTableExists } = require("./utility/check_table");
-const { formatQueryResult } = require("./utility/format_result");
+const {
+  formatQueryResult,
+  formatMailTemplate,
+} = require("./utility/format_result");
 const {
   addCurrencyValue,
   insertOrUpdateConversions,
@@ -134,12 +137,76 @@ app.post("/addGameMonitoring", async (req, res) => {
             game.price_overview ? game.price_overview.initial : 0,
             game.price_overview ? game.price_overview.final : 0
           );
-          games_added.push(id);
+          games_added.push({
+            id,
+            name: game.name,
+            type: game.type,
+            current_price: game.price_overview
+              ? game.price_overview.final / 100
+              : null,
+          });
       }
     }
     res.send({
       code: "success",
       message: { games_added, games_already_present, games_id_not_valid },
+    });
+  }
+});
+
+app.patch("/changeMonitoringStatus", async (req, res) => {
+  const game_ids = req.body.game_ids;
+  if (!game_ids && !Array.isArray(game_ids)) {
+    res.status(400).send({
+      status: "bad request",
+      message: "Required array param: game_id",
+    });
+  } else {
+    if (!(await doesTableExists(properties.GAMES))) {
+      res.status(400).send({
+        status: "bad request",
+        message: `Table '${properties.GAMES}' does not exists.\nIt is not possible to change monitoring status for the required games`,
+      });
+    }
+    const games_updated = [];
+    const games_id_not_valid = [];
+    const games_not_present = [];
+
+    for await (id of game_ids) {
+      const game_already_loaded = await selects.gameAlreadyLoaded(id);
+      switch (game_already_loaded) {
+        case properties.INVALID_GAME_ID:
+          games_id_not_valid.push(id);
+          continue;
+        case false:
+          games_not_present.push(id);
+          continue;
+        default:
+          const value = await steam.getGameByAppID(
+            id,
+            Object.keys(currencies).find((e) => e === "EUR")
+          );
+          if (!value) {
+            games_id_not_valid.push(id);
+            continue;
+          }
+
+          const monitoring_status =
+            game_already_loaded[properties.GAMES_FIELDS.been_watched] === true
+              ? false
+              : true;
+
+          await updates.updateGamesStatus(id, monitoring_status);
+          games_updated.push({
+            id,
+            name: game_already_loaded[properties.GAMES_FIELDS.game_name],
+            monitoring_status,
+          });
+      }
+    }
+    res.send({
+      code: "success",
+      message: { games_updated, games_not_present, games_id_not_valid },
     });
   }
 });
@@ -150,9 +217,9 @@ app.get("/checkGamePrice", async ({ res }) => {
     currencies[properties.DEFAULT_CURRENCY].code,
   ]);
   const prices_list = [];
-  let mail_body = { fields: [], rows: [] };
   for await (g of games) {
     if (g.is_free) continue;
+    if (!g[properties.GAMES_FIELDS.been_watched]) continue;
     let body_string = `${g.name}\n`;
     const price_per_game = [];
     const id = g.game_id;
@@ -195,12 +262,11 @@ app.get("/checkGamePrice", async ({ res }) => {
           );
         return JSON.parse(JSON.stringify({ name: e }));
       });
-      mail_body.fields = fields;
-      mail_body.rows = price_per_game;
-      const formatted_mail_body = formatQueryResult({
-        entries: mail_body,
-        image: g.header_image,
-      });
+      const formatted_mail_body = formatMailTemplate(
+        fields,
+        price_per_game,
+        g.header_image
+      );
 
       await sendMail(
         `STEAM - PRICE CHANGE: ${g.name}`,
