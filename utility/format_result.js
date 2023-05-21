@@ -1,5 +1,45 @@
 const fs = require("fs");
+const juice = require("juice");
 const parse = require("node-html-parser").parse;
+
+const populateTemplate = ({ template, style, attributes, images }) => {
+  // TODO handle control if objs are JSONs
+  if (
+    (attributes && !Array.isArray(attributes)) ||
+    (images && !Array.isArray(images))
+  ) {
+    console.log("Params 'attributes' and 'images' must be of type array");
+    return;
+  }
+
+  try {
+    const html = fs.readFileSync(template, "utf8");
+    const documentStyles = fs.readFileSync(style);
+
+    const root = parse(html);
+
+    attributes.forEach((e) => {
+      const element = root.getElementById(Object.keys(e)[0]);
+      if (element) element.innerHTML = Object.values(e)[0];
+    });
+
+    images.forEach((e) => {
+      const element = root.getElementById(Object.keys(e)[0]);
+      if (element) element.setAttribute("src", Object.values(e)[0]);
+    });
+
+    const id_styles = root.getElementById(Object.keys({ style })[0]);
+
+    if (id_styles) {
+      id_styles.innerHTML = documentStyles;
+      return (root_inline_css = juice(`${root}`));
+    }
+
+    return `${root}`;
+  } catch (e) {
+    console.log(e.stack);
+  }
+};
 
 module.exports = {
   formatQueryResult: ({ table = null, entries, image = null }) => {
@@ -23,26 +63,11 @@ module.exports = {
       rows += "</tr>";
     });
 
-    // TODO extract a method and declare a function for each template
-    const html = fs.readFileSync("templates/mail.html", "utf8");
-    const documentStyles = fs.readFileSync("templates/css/style.css");
-
-    const root = parse(html);
-
-    const id_table = root.getElementById("table"),
-      id_headers = root.getElementById("headers"),
-      id_rows = root.getElementById("rows"),
-      id_styles = root.getElementById("styles"),
-      id_image = root.getElementById("header_image");
-
-    if (id_table && table) root.getElementById("table").innerHTML = table;
-    if (id_headers) root.getElementById("headers").innerHTML = headers;
-    if (id_rows) root.getElementById("rows").innerHTML = rows;
-    if (id_styles) root.getElementById("styles").innerHTML = documentStyles;
-    if (id_image && image)
-      root.getElementById("header_image").src =
-        "https://cdn.akamai.steamstatic.com/steam/apps/1259420/header_alt_assets_2.jpg?t=1684177712";
-
-    return `${root}`;
+    return populateTemplate({
+      template: "templates/mail.html",
+      style: "templates/css/style.css",
+      attributes: [{ headers }, { rows }],
+      images: [{ image }],
+    });
   },
 };

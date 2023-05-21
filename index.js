@@ -187,9 +187,14 @@ app.get("/checkGamePrice", async ({ res }) => {
         name: g.name,
         change_in_price: price_per_game,
       });
-      const fields = Object.keys(price_per_game[0]).map((e) =>
-        JSON.parse(JSON.stringify({ name: e }))
-      );
+      const fields = Object.keys(price_per_game[0]).map((e) => {
+        // think i'm going mad tinkering with this one
+        if (e === Object.keys(prices_list[0].change_in_price[0])[1])
+          return JSON.parse(
+            JSON.stringify({ name: `${e} (${properties.DEFAULT_CURRENCY})` })
+          );
+        return JSON.parse(JSON.stringify({ name: e }));
+      });
       mail_body.fields = fields;
       mail_body.rows = price_per_game;
       const formatted_mail_body = formatQueryResult({
