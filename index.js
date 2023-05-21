@@ -32,7 +32,7 @@ app.post(
   async (req, res) => await addCurrencyValue(req, res)
 );
 
-app.patch("/updateCurrencyValues", async ({ res }) => {
+app.get("/updateCurrencyValues", async ({ res }) => {
   const currencies = (await selects.selectAll([properties.CONVERSIONS])).rows;
   const conversions = [];
   for await (curr of currencies) {
